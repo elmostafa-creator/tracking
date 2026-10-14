@@ -25,7 +25,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:14px 10px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;justify-content:space-between}
 h1{font:700 22px/1 var(--display);margin:0;letter-spacing:-.01em}
 .tabs{display:flex;gap:4px;background:var(--tint);padding:4px;border-radius:12px}
-.tabs button{border:0;background:transparent;padding:9px 18px;border-radius:9px;font-weight:600;color:var(--muted);min-height:40px}
+.tabs button{border:0;background:transparent;padding:9px 18px;border-radius:99px;font-weight:600;color:var(--muted);min-height:40px}
 .tabs button[aria-selected=true]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgb(0 0 0/.12)}
 .tabs button[aria-selected=true]::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ac);margin-right:8px}
 .sync{font-size:12px;color:var(--muted)}
@@ -135,10 +135,28 @@ footer{margin-top:26px;display:flex;gap:8px;flex-wrap:wrap;justify-content:cente
   <footer id="foot"></footer>
 </div>
 <div id="toast"></div>
+
+<!-- External JS Libraries -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
 <script>
 (function(){
 "use strict";
+
+/* ---------- Firebase Setup ---------- */
+const firebaseConfig = {
+  apiKey: "AIzaSyC6AWSGiVfWlU1b9NV8T6TmdiJG_OiWJZw",
+  authDomain: "trackkin-990e7.firebaseapp.com",
+  databaseURL: "https://trackkin-990e7-default-rtdb.firebaseio.com",
+  projectId: "trackkin-990e7",
+  storageBucket: "trackkin-990e7.firebasestorage.app",
+  messagingSenderId: "896689678977",
+  appId: "1:896689678977:web:8a17325c25ebe0c1357b80",
+  measurementId: "G-T7N38XRTQJ"
+};
+
 /* ---------- constants ---------- */
 const START="2026-10-05", REV="2027-01-18", EXAM="2027-01-25";
 const MUSCLES=[["chest","Chest","d1"],["fdelt","Front delts","d1"],["sdelt","Side delts","d1"],["bi","Biceps","d1"],
@@ -196,29 +214,59 @@ let dbRef=null,saving=false,dirty=false,lastJson="",timer=null;
 const sync=t=>{const e=document.getElementById("sync");if(e)e.textContent=t};
 function cacheLocal(){try{localStorage.setItem("gms-state",JSON.stringify(S))}catch(e){}}
 function loadLocal(){try{const j=localStorage.getItem("gms-state");if(j)S=norm(JSON.parse(j))}catch(e){}}
+
 async function persist(){
   cacheLocal();
   if(!dbRef){sync("Saved on this device");return}
   if(saving){dirty=true;return}
-  saving=true;sync("Saving…");
-  try{do{dirty=false;const json=JSON.stringify(S);lastJson=json;await dbRef.set({json:json,t:S.t})}while(dirty);sync("Saved")}
-  catch(e){sync("Saved on this device only")}
-  finally{saving=false}
-}
-function commit(){S.t=Date.now();render();clearTimeout(timer);timer=setTimeout(persist,300)}
-async function initDb(){
+  saving=true;sync("Cloud Saving…");
   try{
-    if(!window.claude||!window.claude.use)return;
-    const db=await window.claude.use("db");if(!db)return;
-    dbRef=db.doc("app/state");
-    dbRef.onSnapshot(function(snap){
-      if(!snap.exists){if(hasData())persist();else sync("Saved");return}
-      const d=snap.data();if(!d||!d.json||d.json===lastJson)return;
+    do{
+      dirty=false;
+      const json=JSON.stringify(S);
+      lastJson=json;
+      await dbRef.set({json:json,t:S.t||Date.now()});
+    }while(dirty);
+    sync("Saved to Cloud");
+  }catch(e){
+    console.error(e);
+    sync("Saved on this device only");
+  }finally{
+    saving=false;
+  }
+}
+
+function commit(){S.t=Date.now();render();clearTimeout(timer);timer=setTimeout(persist,300)}
+
+function initDb(){
+  try{
+    if(typeof firebase==="undefined") return;
+    if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    dbRef=firebase.database().ref("gms_state");
+    dbRef.on("value", function(snap){
+      const d=snap.val();
+      if(!d){
+        if(hasData()) persist();
+        else sync("Saved to Cloud");
+        return;
+      }
+      if(!d.json||d.json===lastJson) return;
       let inc;try{inc=JSON.parse(d.json)}catch(e){return}
-      if((inc.t||0)>(S.t||0)||!hasData()){S=norm(inc);lastJson=d.json;cacheLocal();render();sync("Saved")}
-      else if((inc.t||0)<(S.t||0))persist();
-    },function(){sync("Saved on this device only")});
-  }catch(e){sync("Saved on this device")}
+      if((inc.t||0)>(S.t||0)||!hasData()){
+        S=norm(inc);
+        lastJson=d.json;
+        cacheLocal();
+        render();
+        sync("Saved to Cloud");
+      }else if((inc.t||0)<(S.t||0)){
+        persist();
+      }
+    }, function(err){
+      sync("Saved on this device only");
+    });
+  }catch(e){
+    sync("Saved on this device");
+  }
 }
 
 /* ---------- gym calc ---------- */
@@ -486,10 +534,14 @@ async function exportXlsx(){
    ["Study",S.study.slice().sort((a,b)=>a.d<b.d?-1:1).map(l=>({Date:l.d,Module:MOD[l.m][1],Hours:l.h}))]];
   sheets.forEach(s=>X.utils.book_append_sheet(wb,X.utils.json_to_sheet(s[1].length?s[1]:[{}]),s[0]));
   const buf=X.write(wb,{type:"array",bookType:"xlsx"});
-  try{const dl=window.claude&&window.claude.use?await window.claude.use("downloads"):null;
-    if(!dl){toast("Saving files is not available in this view.");return}
-    await dl.save({filename:"gym-money-study.xlsx",data:buf});toast("Exported.");
-  }catch(e){if(!e||e.code!=="declined")toast("Could not export.")}
+  try{
+    const blob=new Blob([buf],{type:"application/octet-stream"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url;a.download="gym-money-study.xlsx";a.click();
+    URL.revokeObjectURL(url);
+    toast("Exported.");
+  }catch(e){toast("Could not export.")}
 }
 const A={
   tab:d=>{U.tab=d.t;try{localStorage.setItem("gms-tab",U.tab)}catch(e){}render()},
@@ -523,5 +575,4 @@ loadLocal();render();sync(hasData()?"Saved on this device":"");
 initDb();
 })();
 </script>
-
 </body></html>
