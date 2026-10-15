@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#F6F5F1">
 <title>Gym Money Study</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&display=swap">
@@ -25,7 +25,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:14px 10px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;justify-content:space-between}
 h1{font:700 22px/1 var(--display);margin:0;letter-spacing:-.01em}
 .tabs{display:flex;gap:4px;background:var(--tint);padding:4px;border-radius:12px}
-.tabs button{border:0;background:transparent;padding:9px 18px;border-radius:99px;font-weight:600;color:var(--muted);min-height:40px}
+.tabs button{border:0;background:transparent;padding:9px 18px;border-radius:9px;font-weight:600;color:var(--muted);min-height:40px}
 .tabs button[aria-selected=true]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgb(0 0 0/.12)}
 .tabs button[aria-selected=true]::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ac);margin-right:8px}
 .sync{font-size:12px;color:var(--muted)}
@@ -123,8 +123,21 @@ footer{margin-top:26px;display:flex;gap:8px;flex-wrap:wrap;justify-content:cente
 .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media (max-width:520px){.two{grid-template-columns:1fr}.br{grid-template-columns:minmax(80px,38%) 1fr auto}}
 @media (prefers-reduced-motion:no-preference){.fill,.col i{transition:height .25s,width .25s}}
+
+.cal button.out{opacity:.35}
+.pie{display:grid;grid-template-columns:150px 1fr;gap:16px;align-items:center}
+@media (max-width:520px){.pie{grid-template-columns:116px 1fr;gap:12px}}
+.pleg{display:grid;gap:6px;font-size:13px;min-width:0}
+.pl{display:grid;grid-template-columns:12px 1fr auto auto;gap:8px;align-items:center}
+.pl i{width:12px;height:12px;border-radius:4px}
+.pl span{min-width:0;overflow-wrap:anywhere}
+.pl b{font-variant-numeric:tabular-nums}
+.pl em{font-style:normal;color:var(--muted);font-size:12px;min-width:44px;text-align:right;font-variant-numeric:tabular-nums}
+.rtp{position:fixed;right:16px;bottom:calc(76px + env(safe-area-inset-bottom,0px));background:var(--ac);color:#fff;padding:8px 8px 8px 16px;border-radius:99px;display:flex;gap:12px;align-items:center;z-index:9;font:700 16px var(--display);font-variant-numeric:tabular-nums;box-shadow:0 2px 8px rgb(0 0 0/.25)}
+.rtp button{background:rgb(255 255 255/.22);border:0;color:inherit;border-radius:99px;padding:6px 12px;font:600 13px var(--body)}
 </style>
 
+</head><body>
 <div class="wrap">
   <header>
     <h1>Gym Money Study</h1>
@@ -135,28 +148,13 @@ footer{margin-top:26px;display:flex;gap:8px;flex-wrap:wrap;justify-content:cente
   <footer id="foot"></footer>
 </div>
 <div id="toast"></div>
-
-<!-- External JS Libraries -->
+<div id="rt"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-
 <script>
 (function(){
 "use strict";
-
-/* ---------- Firebase Setup ---------- */
-const firebaseConfig = {
-  apiKey: "AIzaSyC6AWSGiVfWlU1b9NV8T6TmdiJG_OiWJZw",
-  authDomain: "trackkin-990e7.firebaseapp.com",
-  databaseURL: "https://trackkin-990e7-default-rtdb.firebaseio.com",
-  projectId: "trackkin-990e7",
-  storageBucket: "trackkin-990e7.firebasestorage.app",
-  messagingSenderId: "896689678977",
-  appId: "1:896689678977:web:8a17325c25ebe0c1357b80",
-  measurementId: "G-T7N38XRTQJ"
-};
-
 /* ---------- constants ---------- */
 const START="2026-10-05", REV="2027-01-18", EXAM="2027-01-25";
 const MUSCLES=[["chest","Chest","d1"],["fdelt","Front delts","d1"],["sdelt","Side delts","d1"],["bi","Biceps","d1"],
@@ -170,8 +168,9 @@ const EX=[["Bench press","chest"],["Incline DB press","chest"],["Shoulder press"
  ["Lat pulldown","back"],["Barbell row","back"],["Rear delt fly","rdelt"],["Triceps pushdown","tri"],["Romanian deadlift","ham"],
  ["Leg curl","ham"],["Squat","quad"],["Leg press","quad"],["Calf raise","calf"]];
 const EXM=Object.fromEntries(EX);
-const CATS=["Food","Transport","Gym & supplements","Phone & internet","Study","Going out","Clothes","Family","Other"];
-const BUDGET0={"Food":800,"Transport":300,"Gym & supplements":500,"Phone & internet":100,"Study":200,"Going out":300,"Clothes":200,"Family":300,"Other":200};
+const CATS=["Home food","Uni restaurant","Restaurant (outside)","Girlfriend","Transport","Gym & supplements","Phone & internet","Study","Going out","Clothes","Family","Other"];
+const PAL=["#2E7A58","#D08A1E","#3665A6","#C0508A","#7A5AA6","#2A8C9A","#B24A3E","#6F7D2A","#8A6A4F","#4F6D8A","#B8962E","#8C8B82"];
+const BUDGET0={"Home food":400,"Uni restaurant":250,"Restaurant (outside)":200,"Girlfriend":300,"Transport":300,"Gym & supplements":500,"Phone & internet":100,"Study":200,"Going out":300,"Clothes":200,"Family":300,"Other":200};
 const MODS=[["bda","Business Data Analytics & Decision Making","Data Analytics",45],["fin","Foundations of Finance","Finance",39],
  ["mkt","Introduction to Marketing & BI","Marketing & BI",45],["ob","Organizational Behavior & Leadership","Org. Behavior",48],
  ["sm","Strategic Management Foundations","Strategy",18],["lia","Lead in Action 1","Lead in Action",48],
@@ -201,72 +200,55 @@ const nf=n=>Math.round(n).toLocaleString("en-US");
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
 /* ---------- state ---------- */
-const blank=()=>({v:1,t:0,gym:{days:{}},lifts:[],body:[],tx:[],budgets:Object.assign({},BUDGET0),study:[],goal:15});
+const blank=()=>({v:1,t:0,gym:{days:{}},lifts:[],body:[],tx:[],budgets:Object.assign({},BUDGET0),study:[],goal:15,bwGoal:0});
 let S=blank();
-const norm=o=>Object.assign(blank(),o||{},{});
+const norm=o=>{const x=Object.assign(blank(),o||{});x.budgets=Object.assign({},BUDGET0,x.budgets||{});x.tx.forEach(t=>{if(t.c==="Food")t.c="Home food"});return x};
 const hasData=()=>Object.keys(S.gym.days).length+S.lifts.length+S.body.length+S.tx.length+S.study.length>0;
-const U={tab:"gym",gd:T(),gview:28,md:T(),mm:monthOf(T()),kind:"e",amt:[],cat:"Food",imp:false,
+const U={cm:null,rest:90,sw:0,tab:"gym",gd:T(),gview:28,md:T(),mm:monthOf(T()),kind:"e",amt:[],cat:"Home food",imp:false,
   sd:T(),sm:"bda",hrs:[],ex:"Bench press",sets:3,reps:8,kg:20,bw:null};
 try{const t=localStorage.getItem("gms-tab");if(t)U.tab=t}catch(e){}
 
-/* ---------- persistence ---------- */
+/* ---------- persistence (Firebase Realtime Database) ---------- */
+const firebaseConfig={
+  apiKey:"AIzaSyC6AWSGiVfWlU1b9NV8T6TmdiJG_OiWJZw",
+  authDomain:"trackkin-990e7.firebaseapp.com",
+  databaseURL:"https://trackkin-990e7-default-rtdb.firebaseio.com",
+  projectId:"trackkin-990e7",
+  storageBucket:"trackkin-990e7.firebasestorage.app",
+  messagingSenderId:"896689678977",
+  appId:"1:896689678977:web:8a17325c25ebe0c1357b80",
+  measurementId:"G-T7N38XRTQJ"
+};
 let dbRef=null,saving=false,dirty=false,lastJson="",timer=null;
 const sync=t=>{const e=document.getElementById("sync");if(e)e.textContent=t};
 function cacheLocal(){try{localStorage.setItem("gms-state",JSON.stringify(S))}catch(e){}}
 function loadLocal(){try{const j=localStorage.getItem("gms-state");if(j)S=norm(JSON.parse(j))}catch(e){}}
-
 async function persist(){
   cacheLocal();
   if(!dbRef){sync("Saved on this device");return}
   if(saving){dirty=true;return}
   saving=true;sync("Cloud Saving…");
   try{
-    do{
-      dirty=false;
-      const json=JSON.stringify(S);
-      lastJson=json;
-      await dbRef.set({json:json,t:S.t||Date.now()});
-    }while(dirty);
+    do{dirty=false;const json=JSON.stringify(S);lastJson=json;await dbRef.set({json:json,t:S.t||Date.now()})}while(dirty);
     sync("Saved to Cloud");
-  }catch(e){
-    console.error(e);
-    sync("Saved on this device only");
-  }finally{
-    saving=false;
-  }
+  }catch(e){console.error(e);sync("Saved on this device only")}
+  finally{saving=false}
 }
-
 function commit(){S.t=Date.now();render();clearTimeout(timer);timer=setTimeout(persist,300)}
-
 function initDb(){
   try{
-    if(typeof firebase==="undefined") return;
-    if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    if(typeof firebase==="undefined")return;
+    if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
     dbRef=firebase.database().ref("gms_state");
-    dbRef.on("value", function(snap){
+    dbRef.on("value",function(snap){
       const d=snap.val();
-      if(!d){
-        if(hasData()) persist();
-        else sync("Saved to Cloud");
-        return;
-      }
-      if(!d.json||d.json===lastJson) return;
+      if(!d){if(hasData())persist();else sync("Saved to Cloud");return}
+      if(!d.json||d.json===lastJson)return;
       let inc;try{inc=JSON.parse(d.json)}catch(e){return}
-      if((inc.t||0)>(S.t||0)||!hasData()){
-        S=norm(inc);
-        lastJson=d.json;
-        cacheLocal();
-        render();
-        sync("Saved to Cloud");
-      }else if((inc.t||0)<(S.t||0)){
-        persist();
-      }
-    }, function(err){
-      sync("Saved on this device only");
-    });
-  }catch(e){
-    sync("Saved on this device");
-  }
+      if((inc.t||0)>(S.t||0)||!hasData()){S=norm(inc);lastJson=d.json;cacheLocal();render();sync("Saved to Cloud")}
+      else if((inc.t||0)<(S.t||0)){persist()}
+    },function(){sync("Saved on this device only")});
+  }catch(e){sync("Saved on this device")}
 }
 
 /* ---------- gym calc ---------- */
@@ -304,10 +286,11 @@ function weekSets(start){
 const e1=(kg,reps)=>kg*(1+reps/30);
 
 /* ---------- chart helpers ---------- */
-function line(pts,unit,h){
+function line(pts,unit,h,goal){
   h=h||150;const w=420,L=40,R=26,Tp=16,B=24;
   if(!pts.length)return '<div class="empty">No entries yet.</div>';
-  const ys=pts.map(p=>p.y);let lo=Math.min.apply(null,ys),hi=Math.max.apply(null,ys);
+  const ys=pts.map(p=>p.y);if(goal)ys.push(goal);
+  let lo=Math.min.apply(null,ys),hi=Math.max.apply(null,ys);
   if(hi-lo<1){lo-=1;hi+=1}const pd=(hi-lo)*.15;lo-=pd;hi+=pd;
   const t0=pts[0].t,t1=pts[pts.length-1].t,span=Math.max(1,t1-t0);
   const X=p=>pts.length===1?L+(w-L-R)/2:L+(p.t-t0)/span*(w-L-R);
@@ -316,11 +299,26 @@ function line(pts,unit,h){
   const last=pts[pts.length-1];
   let g='';
   [lo+pd,(lo+hi)/2,hi-pd].forEach(v=>{g+='<line x1="'+L+'" x2="'+(w-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="var(--line)"/><text x="'+(L-6)+'" y="'+(Y(v)+4)+'" text-anchor="end">'+r1(v)+'</text>'});
+  if(goal)g+='<line x1="'+L+'" x2="'+(w-R)+'" y1="'+Y(goal)+'" y2="'+Y(goal)+'" stroke="var(--bad)" stroke-width="2" stroke-dasharray="5 4"/><text x="'+(w-R)+'" y="'+(Y(goal)-5)+'" text-anchor="end" style="fill:var(--bad)">goal '+r1(goal)+'</text>';
   const dots=pts.map(p=>'<circle cx="'+X(p).toFixed(1)+'" cy="'+Y(p.y).toFixed(1)+'" r="4" fill="var(--ac)" stroke="var(--surface)" stroke-width="2"><title>'+esc(p.l)+": "+r1(p.y)+" "+unit+'</title></circle>').join("");
   return '<svg viewBox="0 0 '+w+' '+h+'" width="100%" role="img" aria-label="Trend, latest '+r1(last.y)+' '+unit+'">'+g+
    '<path d="'+path+'" fill="none" stroke="var(--ac)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>'+dots+
    '<text x="'+X(last)+'" y="'+(Y(last.y)-10)+'" text-anchor="end" style="fill:var(--ink);font-weight:600;font-size:12px">'+r1(last.y)+' '+unit+'</text>'+
    '<text x="'+L+'" y="'+(h-6)+'">'+esc(pts[0].l)+'</text><text x="'+(w-R)+'" y="'+(h-6)+'" text-anchor="end">'+esc(last.l)+'</text></svg>';
+}
+function pie(items,unit,center){
+  items=items.filter(i=>i.value>0).sort((a,b)=>b.value-a.value);
+  const tot=items.reduce((s,i)=>s+i.value,0);
+  if(!tot)return '<div class="empty">Nothing to show yet.</div>';
+  const C=2*Math.PI*15.915;let off=0;
+  const arcs=items.map(i=>{const len=i.value/tot*C;
+    const a='<circle cx="21" cy="21" r="15.915" fill="none" stroke="'+i.color+'" stroke-width="7" stroke-dasharray="'+len.toFixed(3)+' '+(C-len).toFixed(3)+'" stroke-dashoffset="'+(-off).toFixed(3)+'" transform="rotate(-90 21 21)"><title>'+esc(i.label)+": "+r1(i.value)+" "+unit+'</title></circle>';
+    off+=len;return a}).join("");
+  const leg=items.map(i=>'<div class="pl"><i style="background:'+i.color+'"></i><span>'+esc(i.label)+'</span><b>'+Math.round(i.value/tot*100)+'%</b><em>'+(i.txt!=null?i.txt:r1(i.value))+'</em></div>').join("");
+  return '<div class="pie"><svg viewBox="0 0 42 42" width="100%" role="img" aria-label="Share chart">'+
+   '<circle cx="21" cy="21" r="15.915" fill="none" stroke="var(--tint)" stroke-width="7"/>'+arcs+
+   '<text x="21" y="21.5" text-anchor="middle" style="fill:var(--ink);font-weight:700;font-size:6px;font-family:var(--display)">'+center+'</text>'+
+   '<text x="21" y="26.5" text-anchor="middle" style="font-size:3.4px">'+unit+'</text></svg><div class="pleg">'+leg+'</div></div>';
 }
 function barRow(label,val,max,txt,extra){
   const p=max>0?Math.min(100,val/max*100):0;
@@ -353,23 +351,31 @@ function viewGym(){
   }
   h+='</section>';
   /* calendar */
-  const first=Object.keys(S.gym.days).sort()[0]||t,wk0=monday(first<START?first:START);
-  let cal='<div class="cal"><span></span>'+DAY.map(d=>'<span class="dn">'+d[0]+'</span>').join("");
-  for(let w=0;w<17;w++){
+  const first=Object.keys(S.gym.days).sort()[0]||t,cm=U.cm||monthOf(U.gd),c1=cm+"-01",wk0=monday(c1);
+  const nd=new Date(+cm.slice(0,4),+cm.slice(5),0).getDate(),nw=Math.ceil((dow(c1)+nd)/7);
+  let nses=0;Object.keys(S.gym.days).forEach(d=>{if(monthOf(d)===cm&&sess(d))nses++});
+  let cal='<div class="datenav"><button class="sq" data-a="cm" data-n="-1" aria-label="Previous month">‹</button><div class="d">'+mlabel(cm)+' · '+nses+' sessions</div><button class="sq" data-a="cm" data-n="1" aria-label="Next month">›</button>'+(cm!==monthOf(t)?'<button class="btn ghost sm" data-a="cmnow">This month</button>':"")+'</div>'+
+   '<div class="cal"><span></span>'+DAY.map(d=>'<span class="dn">'+d[0]+'</span>').join("");
+  for(let w=0;w<nw;w++){
     const ws=add(wk0,w*7);cal+='<span class="wk">'+short(ws)+'</span>';
     for(let k=0;k<7;k++){
       const d=add(ws,k);let c="";
       if(sess(d))c="on";else if(dow(d)===6)c="sun";else if(d>t)c="fut";else if(d>=first&&d<t)c="miss";
+      if(monthOf(d)!==cm)c+=" out";
       if(d===U.gd)c+=" sel";if(d===t)c+=" now";
       cal+='<button class="'+c+'" data-a="gpick" data-d="'+d+'" aria-label="'+dlabel(d)+'">'+parse(d).getDate()+'</button>';
     }
   }
-  cal+='</div><div class="legend"><span><i style="background:var(--ac)"></i>Trained</span><span><i style="background:var(--badtint)"></i>Missed</span><span><i style="background:var(--tint)"></i>Open</span></div><div class="hint">Tap a day to log or edit it.</div>';
-  h+='<section class="card"><h2>Semester calendar</h2>'+cal+'</section>';
+  cal+='</div><div class="legend"><span><i style="background:var(--ac)"></i>Trained</span><span><i style="background:var(--badtint)"></i>Missed</span><span><i style="background:var(--tint)"></i>Open</span></div><div class="hint">Use the arrows to go to any month. Tap a day to log or edit it.</div>';
+  h+='<section class="card"><h2>Calendar</h2>'+cal+'</section>';
   /* muscles */
   const mh=muscleHits(),mx=Math.max(1,...Object.values(mh.hits));
   h+='<section class="card"><h2>Muscles hit</h2><div class="seg" role="group" aria-label="Range"><button data-a="gview" data-n="28" aria-pressed="'+(U.gview===28)+'">Last 4 weeks</button><button data-a="gview" data-n="0" aria-pressed="'+(U.gview===0)+'">All time</button></div><div class="bars">'+
    MUSCLES.map(m=>{const l=mh.last[m[0]];return barRow(m[1]+'<div class="hint" style="margin:0">'+(l?(diff(t,l)===0?"today":diff(t,l)+" d ago"):"never")+'</div>',mh.hits[m[0]],mx,mh.hits[m[0]])}).join("")+'</div></section>';
+  /* gym pies */
+  h+='<section class="card"><h2>Muscle share</h2><div class="sub">Which muscles got the most sessions (same range as above).</div>'+pie(MUSCLES.map((m,i)=>({label:m[1],value:mh.hits[m[0]],color:PAL[i],txt:mh.hits[m[0]]+"×"})),"hits",String(Object.values(mh.hits).reduce((a,b)=>a+b,0)))+'</section>';
+  const tc={d1:0,d2:0,legs:0};Object.keys(S.gym.days).forEach(d=>{const x=S.gym.days[d];if(x&&tc[x.t]!=null&&(U.gview===0||d>=add(t,-27)))tc[x.t]++});
+  h+='<section class="card"><h2>Training split</h2><div class="sub">How your sessions divide between Day 1, Day 2 and Legs.</div>'+pie([["d1","Day 1",0],["d2","Day 2",1],["legs","Legs",2]].map(a=>({label:a[1],value:tc[a[0]],color:PAL[a[2]],txt:tc[a[0]]+" days"})),"sessions",String(tc.d1+tc.d2+tc.legs))+'</section>';
   /* weekly sets */
   const ws0=monday(t),sw=weekSets(ws0),sl=weekSets(add(ws0,-7)),smx=Math.max(SET_MAX+4,...Object.values(sw),...Object.values(sl));
   h+='<section class="card"><h2>Weekly sets per muscle</h2><div class="sub">The shaded band is the '+SET_MIN+'–'+SET_MAX+' sets a week range. Sets come from the lifts you log below.</div><div class="bars">'+
@@ -385,11 +391,16 @@ function viewGym(){
    '<div style="margin-top:16px"><button class="btn" data-a="glift">Log for '+(U.gd===t?"today":dlabel(U.gd))+'</button></div>'+
    '<div class="list" style="margin-top:14px">'+(todays.length?todays.map(l=>'<div class="li"><div>'+esc(l.ex)+'<div class="m">'+l.sets+" × "+l.reps+" @ "+r1(l.kg)+' kg</div></div><span class="amt">'+Math.round(e1(l.kg,l.reps))+' 1RM</span><button class="x" data-a="gdel" data-k="lifts" data-id="'+l.id+'" aria-label="Delete">×</button></div>').join(""):'<div class="empty">No lifts logged for this day.</div>')+'</div></div>'+
    '<div><div class="glabel">Estimated 1RM · '+esc(U.ex)+'</div>'+line(pts,"kg")+'<div class="hint">Best set of each session, estimated as weight × (1 + reps ÷ 30).</div></div></div></section>';
+  /* prs + rest timer */
+  const pr={};S.lifts.forEach(l=>{const e=e1(l.kg,l.reps);if(!pr[l.ex]||e>pr[l.ex].e)pr[l.ex]={e:e,kg:l.kg,reps:l.reps,d:l.d}});
+  h+='<section class="card"><h2>Personal records</h2><div class="sub">Best estimated 1RM for each lift.</div>'+(Object.keys(pr).length?'<div class="list">'+EX.filter(e=>pr[e[0]]).map(e=>{const p=pr[e[0]];return '<div class="li" style="grid-template-columns:1fr auto"><div>'+e[0]+'<div class="m">'+r1(p.kg)+' kg × '+p.reps+' · '+short(p.d)+'</div></div><span class="amt">'+Math.round(p.e)+' kg</span></div>'}).join("")+'</div>':'<div class="empty">Log a lift to see your records.</div>')+'</section>';
+  h+='<section class="card"><h2>Rest timer</h2><div class="sub">Starts by itself when you log a lift. Your phone buzzes when time is up.</div><div class="row">'+[60,90,120,180].map(n=>'<button class="chip" data-a="rest" data-n="'+n+'" aria-pressed="'+(U.rest===n)+'">'+(n/60)+' min</button>').join("")+'</div><div style="margin-top:14px"><button class="btn" data-a="rtstart">Start now</button></div></section>';
   /* body */
   if(U.bw==null)U.bw=S.body.length?S.body[S.body.length-1].kg:72;
   const bp=S.body.slice().sort((a,b)=>a.d<b.d?-1:1).map(b=>({t:parse(b.d).getTime(),y:b.kg,l:short(b.d)}));
   h+='<section class="card full"><h2>Bodyweight</h2><div class="grid" style="margin:0"><div>'+stepper("gbw",r1(U.bw),"kg",[-.5,-.1,.1,.5])+'<div style="margin-top:14px"><button class="btn" data-a="gbwlog">Log for '+(U.gd===t?"today":dlabel(U.gd))+'</button></div>'+
-   '<div class="list" style="margin-top:12px">'+S.body.slice().sort((a,b)=>a.d<b.d?1:-1).slice(0,4).map(b=>'<div class="li"><div>'+dlabel(b.d)+'</div><span class="amt">'+r1(b.kg)+' kg</span><button class="x" data-a="gdel" data-k="body" data-id="'+b.id+'" aria-label="Delete">×</button></div>').join("")+'</div></div><div>'+line(bp,"kg")+'</div></div></section>';
+   '<div class="list" style="margin-top:12px">'+S.body.slice().sort((a,b)=>a.d<b.d?1:-1).slice(0,4).map(b=>'<div class="li"><div>'+dlabel(b.d)+'</div><span class="amt">'+r1(b.kg)+' kg</span><button class="x" data-a="gdel" data-k="body" data-id="'+b.id+'" aria-label="Delete">×</button></div>').join("")+'</div>'+
+   '<div class="glabel" style="margin-top:16px">Goal weight (0 = no goal)</div>'+stepper("gbwgoal",r1(S.bwGoal||0),"kg",[-2,-.5,.5,2])+'</div><div>'+line(bp,"kg",150,S.bwGoal||0)+'</div></div></section>';
   return h;
 }
 const tile=(v,l)=>'<div class="stat"><b>'+v+'</b><span>'+l+'</span></div>';
@@ -404,13 +415,14 @@ function viewMoney(){
   const elapsed=cur?parse(t).getDate():(U.mm<monthOf(t)?dim:1);
   const bycat={};CATS.forEach(c=>bycat[c]=0);ex.forEach(x=>bycat[x.c]=(bycat[x.c]||0)+x.a);
   const top=Object.keys(bycat).sort((a,b)=>bycat[b]-bycat[a])[0];
+  const food=(bycat["Home food"]||0)+(bycat["Uni restaurant"]||0)+(bycat["Restaurant (outside)"]||0),gf=bycat["Girlfriend"]||0;
   let h='';
   if(!hasData())h+=banner();
   h+='<div class="datenav" style="grid-column:1/-1;margin:0"><button class="sq" data-a="mm" data-n="-1" aria-label="Previous month">‹</button><div class="d" style="font-size:18px;font-family:var(--display)">'+mlabel(U.mm)+'</div><button class="sq" data-a="mm" data-n="1" aria-label="Next month">›</button></div>';
   h+='<div class="stats">'+tile(nf(spent)+' <small style="font-size:13px">MAD</small>',"spent")+tile(nf(income)+' <small style="font-size:13px">MAD</small>',"income")+
    '<div class="stat"><b style="color:'+(income-spent<0?"var(--bad)":"inherit")+'">'+nf(income-spent)+' <small style="font-size:13px">MAD</small></b><span>left</span></div>'+
    tile(nf(spent/Math.max(1,elapsed))+' <small style="font-size:13px">MAD</small>',"per day")+tile(spent?Math.round(imp/spent*100)+"%":"0%","impulse ("+nf(imp)+" MAD)")+
-   '<div class="stat"><b class="sm">'+(spent&&top?esc(top):"–")+'</b><span>top category</span></div></div>';
+   '<div class="stat"><b class="sm">'+(spent&&top?esc(top):"–")+'</b><span>top category</span></div>'+tile(nf(food)+' <small style="font-size:13px">MAD</small>',"food in total")+tile(nf(gf)+' <small style="font-size:13px">MAD</small>',"girlfriend")+'</div>';
   /* add form */
   const tot=U.amt.reduce((s,n)=>s+n,0);
   h+='<section class="card"><h2>Add</h2><div class="seg"><button data-a="kind" data-k="e" aria-pressed="'+(U.kind==="e")+'">Expense</button><button data-a="kind" data-k="i" aria-pressed="'+(U.kind==="i")+'">Income</button></div>'+
@@ -426,6 +438,10 @@ function viewMoney(){
   h+='<section class="card"><h2>Spending by category</h2>'+(spent?'<div class="bars">'+cats.map(c=>{
     const b=S.budgets[c]||0,v=bycat[c],mx=Math.max(v,b,1),over=b&&v>b;
     return '<div class="br"><div class="l">'+c+'<div class="hint" style="margin:0">'+(spent?Math.round(v/spent*100):0)+'% of spending'+(b?' · budget '+nf(b):"")+'</div></div><div class="track"><div class="fill'+(over?" bad":"")+'" style="width:'+v/mx*100+'%"></div>'+(b?'<div class="mark" style="left:'+Math.min(99,b/mx*100)+'%"></div>':"")+'</div><div class="v">'+nf(v)+'</div></div>'}).join("")+'</div><div class="hint">The black tick is your budget. Red means over it.</div>':'<div class="empty">No expenses in '+mlabel(U.mm)+' yet. Add one above.</div>')+'</section>';
+  /* money pies */
+  h+='<section class="card"><h2>Where the money goes</h2>'+pie(CATS.map((c,i)=>({label:c,value:bycat[c]||0,color:PAL[i],txt:nf(bycat[c]||0)})),"MAD",nf(spent))+'</section>';
+  h+='<section class="card"><h2>Food: home vs restaurants</h2><div class="sub">Home food, the uni restaurant and eating outside.</div>'+pie(["Home food","Uni restaurant","Restaurant (outside)"].map((c,i)=>({label:c,value:bycat[c]||0,color:PAL[i],txt:nf(bycat[c]||0)})),"MAD",nf(food))+'</section>';
+  h+='<section class="card"><h2>Essential vs impulse</h2>'+pie([{label:"Essential",value:spent-imp,color:PAL[0],txt:nf(spent-imp)},{label:"Impulse",value:imp,color:PAL[6],txt:nf(imp)}],"MAD",nf(spent))+'</section>';
   /* daily */
   const dd=[];for(let i=1;i<=dim;i++){const d=U.mm+"-"+pad(i);dd.push({d:d,v:ex.filter(x=>x.d===d).reduce((s,x)=>s+x.a,0)})}
   const dmx=Math.max(1,...dd.map(x=>x.v));
@@ -479,9 +495,11 @@ function viewStudy(){
   h+='<section class="card"><h2>Priority</h2><div class="sub">High means under 60% of the hours expected by today. Targets split your '+S.goal+' h weekly goal across modules by course hours.</div><div class="list">'+
    c.rows.slice().sort((a,b)=>({hi:0,mid:1,ok:2,none:3}[a.p]-{hi:0,mid:1,ok:2,none:3}[b.p])).map(r=>'<div class="li" style="grid-template-columns:1fr auto"><div>'+esc(r.name)+'<div class="m">needs about '+r1(r.need)+' h a week · target '+Math.round(r.target)+' h</div></div><span class="pill '+r.p+'">'+({hi:"High",mid:"Medium",ok:"On track",none:"Too early"}[r.p])+'</span></div>').join("")+'</div>'+
    '<div style="margin-top:14px" class="glabel">Weekly goal</div>'+stepper("goal",S.goal,"hours a week",[-1,1])+'</section>';
-  const wks=[];for(let i=0;i<16;i++){const s=add(START,i*7);wks.push({s:s,v:S.study.filter(l=>l.d>=s&&l.d<=add(s,6)).reduce((a,l)=>a+l.h,0)})}
+  h+='<section class="card"><h2>Share of your study time</h2>'+pie(MODS.map((m,i)=>({label:m[1],value:c.rows.find(r=>r.id===m[0]).done,color:PAL[i],txt:r1(c.rows.find(r=>r.id===m[0]).done)+" h"})),"hours",r1(c.total))+'</section>';
+  const wb0=add(monday(t),-15*7+U.sw*7),wks=[];
+  for(let i=0;i<16;i++){const s=add(wb0,i*7);wks.push({s:s,n:Math.round(diff(s,START)/7)+1,v:S.study.filter(l=>l.d>=s&&l.d<=add(s,6)).reduce((a,l)=>a+l.h,0)})}
   const wmx=Math.max(S.goal+2,...wks.map(w=>w.v));
-  h+='<section class="card full"><h2>Hours per week</h2><div class="cols" style="height:140px"><div class="tline" style="bottom:'+S.goal/wmx*100+'%"></div>'+wks.map((w,i)=>'<div class="col" title="Week of '+short(w.s)+": "+r1(w.v)+' h"><i style="height:'+w.v/wmx*100+'%"></i><span>'+(i+1)+'</span></div>').join("")+'</div><div class="axis"></div><div class="hint">Dashed line is your weekly goal. Weeks run Mon–Sun from 5 Oct. Revision is week 16, exams the week after.</div></section>';
+  h+='<section class="card full"><h2>Hours per week</h2><div class="datenav"><button class="sq" data-a="sw" data-n="-4" aria-label="Earlier weeks">‹</button><div class="d">'+short(wks[0].s)+' to '+short(add(wks[15].s,6))+'</div><button class="sq" data-a="sw" data-n="4" aria-label="Later weeks">›</button>'+(U.sw?'<button class="btn ghost sm" data-a="swnow">Now</button>':"")+'</div><div class="cols" style="height:140px"><div class="tline" style="bottom:'+S.goal/wmx*100+'%"></div>'+wks.map(w=>'<div class="col" title="Week of '+short(w.s)+": "+r1(w.v)+' h"><i style="height:'+w.v/wmx*100+'%"></i><span>'+(w.n>=1?w.n:"")+'</span></div>').join("")+'</div><div class="axis"></div><div class="hint">Dashed line is your weekly goal. Numbers are weeks since 5 Oct. Revision is week 16, exams the week after. Use the arrows to move through time.</div></section>';
   return h;
 }
 
@@ -492,7 +510,7 @@ function render(){
   document.getElementById("tabs").innerHTML=tabs.map(a=>'<button role="tab" data-a="tab" data-t="'+a[0]+'" aria-selected="'+(U.tab===a[0])+'">'+a[1]+'</button>').join("");
   const v=U.tab==="gym"?viewGym():U.tab==="money"?viewMoney():viewStudy();
   document.getElementById("app").innerHTML='<div class="grid">'+v+'</div>';
-  document.getElementById("foot").innerHTML='<button class="btn ghost sm" data-a="export">Export to Excel</button>'+(S.gym.days&&examples()?'<button class="btn ghost sm" data-a="unexample">Remove example data</button>':"");
+  document.getElementById("foot").innerHTML='<button class="btn ghost sm" data-a="export">Export to Excel</button><button class="btn ghost sm" data-a="backup">Backup (JSON)</button><label class="btn ghost sm" style="display:inline-flex;align-items:center">Restore backup<input type="file" accept=".json,application/json" data-a="restore" hidden></label>'+(S.gym.days&&examples()?'<button class="btn ghost sm" data-a="unexample">Remove example data</button>':"");
 }
 const examples=()=>Object.values(S.gym.days).some(d=>d.ex)||S.lifts.some(x=>x.e)||S.tx.some(x=>x.ex)||S.study.some(x=>x.ex)||S.body.some(x=>x.ex);
 
@@ -512,7 +530,7 @@ function example(){
      ty==="d2"?[["Lat pulldown",55+n],["Barbell row",50],["Rear delt fly",8],["Triceps pushdown",25]]:
      [["Squat",70+n],["Romanian deadlift",60],["Leg curl",35],["Calf raise",50]]).forEach(e=>S.lifts.push({id:uid(),d:d,ex:e[0],sets:e[0]==="Bench press"||e[0]==="Squat"?4:3,reps:e[0]==="Calf raise"?15:10,kg:Math.round(e[1]*2)/2,e:1}));
   }
-  [[-9,"Food",125,0],[-8,"Going out",18,1],[-8,"Transport",6,0],[-7,"Gym & supplements",300,0],[-6,"Phone & internet",100,0],[-5,"Food",35,0],[-4,"Gym & supplements",25,1],[-3,"Clothes",350,1],[-2,"Family",150,0],[-1,"Food",88,0]].forEach(a=>S.tx.push({id:uid(),k:"e",d:add(t,a[0]),c:a[1],a:a[2],i:a[3],ex:1}));
+  [[-9,"Home food",125,0],[-8,"Going out",18,1],[-8,"Transport",6,0],[-7,"Gym & supplements",300,0],[-6,"Phone & internet",100,0],[-5,"Uni restaurant",35,0],[-4,"Gym & supplements",25,1],[-3,"Clothes",350,1],[-2,"Family",150,0],[-1,"Restaurant (outside)",88,0],[-3,"Girlfriend",120,0]].forEach(a=>S.tx.push({id:uid(),k:"e",d:add(t,a[0]),c:a[1],a:a[2],i:a[3],ex:1}));
   S.tx.push({id:uid(),k:"i",d:monthOf(t)+"-01",c:"Income",a:2000,i:0,ex:1});
   [[-9,"bda",2],[-8,"fin",1.5],[-7,"mkt",1],[-7,"ob",1.5],[-5,"bda",2],[-4,"fin",1.5],[-3,"sm",1],[-2,"ob",2],[-1,"mkt",1]].forEach(a=>S.study.push({id:uid(),d:add(t,a[0]),m:a[1],h:a[2],ex:1}));
   S.body.push({id:uid(),d:add(t,-9),kg:72,ex:1},{id:uid(),d:add(t,-2),kg:72.3,ex:1});
@@ -534,25 +552,38 @@ async function exportXlsx(){
    ["Study",S.study.slice().sort((a,b)=>a.d<b.d?-1:1).map(l=>({Date:l.d,Module:MOD[l.m][1],Hours:l.h}))]];
   sheets.forEach(s=>X.utils.book_append_sheet(wb,X.utils.json_to_sheet(s[1].length?s[1]:[{}]),s[0]));
   const buf=X.write(wb,{type:"array",bookType:"xlsx"});
-  try{
-    const blob=new Blob([buf],{type:"application/octet-stream"});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement("a");
-    a.href=url;a.download="gym-money-study.xlsx";a.click();
-    URL.revokeObjectURL(url);
-    toast("Exported.");
-  }catch(e){toast("Could not export.")}
+  saveBlob(new Blob([buf],{type:"application/octet-stream"}),"gym-money-study.xlsx");
 }
+function saveBlob(blob,name){
+  try{const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);toast("Saved "+name)}
+  catch(e){toast("Could not save the file.")}
+}
+function backup(){saveBlob(new Blob([JSON.stringify(S)],{type:"application/json"}),"gym-money-study-backup.json")}
+function restore(el){
+  const f=el.files&&el.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{try{const o=JSON.parse(r.result);if(!o||typeof o!=="object"||!o.gym)throw 0;S=norm(o);commit();toast("Backup restored")}catch(e){toast("That file is not a valid backup.")}el.value=""};
+  r.readAsText(f);
+}
+/* rest timer */
+const rt={end:0,iv:null};
+function rtTick(){
+  const el=document.getElementById("rt"),left=Math.ceil((rt.end-Date.now())/1000);
+  if(left<=0){clearInterval(rt.iv);rt.iv=null;el.innerHTML="";try{navigator.vibrate&&navigator.vibrate([300,150,300])}catch(e){}toast("Rest over. Next set!");return}
+  el.innerHTML='<div class="rtp"><span>Rest '+Math.floor(left/60)+":"+pad(left%60)+'</span><button data-a="rtstop">Stop</button></div>';
+}
+function rtStart(){clearInterval(rt.iv);rt.end=Date.now()+U.rest*1000;rtTick();rt.iv=setInterval(rtTick,500)}
+function rtStop(){clearInterval(rt.iv);rt.iv=null;document.getElementById("rt").innerHTML=""}
 const A={
   tab:d=>{U.tab=d.t;try{localStorage.setItem("gms-tab",U.tab)}catch(e){}render()},
-  gd:d=>{U.gd=add(U.gd,+d.n);render()},gtoday:()=>{U.gd=T();render()},gpick:d=>{U.gd=d.d;render();window.scrollTo({top:document.querySelector(".card").offsetTop-70,behavior:"smooth"})},
+  gd:d=>{U.gd=add(U.gd,+d.n);U.cm=null;render()},gtoday:()=>{U.gd=T();U.cm=null;render()},gpick:d=>{U.gd=d.d;U.cm=null;render();window.scrollTo({top:document.querySelector(".card").offsetTop-70,behavior:"smooth"})},
   gtype:d=>{const x=S.gym.days[U.gd];if(x&&x.t===d.t){delete S.gym.days[U.gd]}else S.gym.days[U.gd]={t:d.t,m:TPL[d.t].slice()};commit()},
   gmus:(d,el)=>{const x=S.gym.days[U.gd];if(!x)return;const s=new Set(x.m||[]);el.checked?s.add(d.m):s.delete(d.m);x.m=MUSCLES.map(m=>m[0]).filter(i=>s.has(i));commit()},
   gclear:()=>{delete S.gym.days[U.gd];commit()},
   gview:d=>{U.gview=+d.n;render()},
   gex:d=>{U.ex=d.e;lastFor(U.ex);render()},
   gsets:d=>{U.sets=Math.max(1,U.sets+ +d.n);render()},greps:d=>{U.reps=Math.max(1,U.reps+ +d.n);render()},gkg:d=>{U.kg=Math.max(0,U.kg+ +d.n);render()},
-  glift:()=>{S.lifts.push({id:uid(),d:U.gd,ex:U.ex,sets:U.sets,reps:U.reps,kg:U.kg});commit();toast("Logged "+U.ex)},
+  glift:()=>{S.lifts.push({id:uid(),d:U.gd,ex:U.ex,sets:U.sets,reps:U.reps,kg:U.kg});commit();toast("Logged "+U.ex);rtStart()},
   gbw:d=>{U.bw=Math.max(30,Math.round((U.bw+ +d.n)*10)/10);render()},
   gbwlog:()=>{S.body=S.body.filter(b=>b.d!==U.gd);S.body.push({id:uid(),d:U.gd,kg:U.bw});commit();toast("Weight logged")},
   gdel:d=>{const k=d.k,i=S[k].findIndex(x=>x.id===d.id);if(i<0)return;const it=S[k].splice(i,1)[0];commit();toast("Deleted",()=>{S[k].push(it);commit()})},
@@ -564,6 +595,11 @@ const A={
   sd:d=>{U.sd=add(U.sd,+d.n);render()},smod:d=>{U.sm=d.m;render()},hrs:d=>{U.hrs.push(+d.n);render()},hrsundo:()=>{U.hrs.pop();render()},
   addstudy:()=>{const h=U.hrs.reduce((s,n)=>s+n,0);if(!h)return;S.study.push({id:uid(),d:U.sd,m:U.sm,h:h});U.hrs=[];commit();toast("Added "+r1(h)+" h")},
   goal:d=>{S.goal=Math.max(1,S.goal+ +d.n);commit()},
+  cm:d=>{U.cm=addMonth(U.cm||monthOf(U.gd),+d.n);render()},cmnow:()=>{U.cm=monthOf(T());render()},
+  rest:d=>{U.rest=+d.n;render()},rtstart:()=>rtStart(),rtstop:()=>rtStop(),
+  gbwgoal:d=>{const n=+d.n;let g=S.bwGoal||0;g=g===0&&n>0?U.bw:Math.max(0,r1(g+n));S.bwGoal=g;commit()},
+  sw:d=>{U.sw=Math.min(0,U.sw+ +d.n)-0;render()},swnow:()=>{U.sw=0;render()},
+  backup:backup,restore:(d,el)=>restore(el),
   example:example,unexample:unexample,export:exportXlsx,
   undo:()=>{if(toast.undo){toast.undo();document.getElementById("toast").innerHTML=""}}
 };
